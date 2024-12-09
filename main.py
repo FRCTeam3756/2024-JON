@@ -8,11 +8,11 @@ from ultralytics import YOLO
 from datetime import datetime
 from deep_sort_realtime.deepsort_tracker import DeepSort
 
-from decision_matrix import DecisionMatrix
-from stereo_video import StereoVision
-from mono_video import MonoVision
+from decision_engine.decision_matrix import DecisionMatrix
+from vision_tracking.camera_calculations.stereo_video import StereoVision
+from vision_tracking.camera_calculations.mono_video import MonoVision
 from trackable_objects import Note
-from rio_communication import post_to_network_tables
+from networking.rio_communication import post_to_network_tables
 
 ###############################################################
 
