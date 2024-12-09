@@ -5,11 +5,11 @@ def main():
     best_device = "cuda" if torch.cuda.is_available() else "cpu"
     print("Running on device:", best_device)
 
-    model = YOLO('yolov11n/yolov11n.pt')
+    model = YOLO('yolo11n.pt')
 
     model.train(
-        data='yolov11n/scripts/dataset.yaml',
-        project='yolov11n/runs',
+        data='vision_tracking/scripts/dataset.yaml',
+        project='vision_tracking/runs',
         device=best_device,
         epochs=50, 
         imgsz=640, 

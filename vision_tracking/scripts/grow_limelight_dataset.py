@@ -3,7 +3,7 @@ import time
 import os
 
 video_url = "http://10.37.56.11:5800/"
-save_folder = "yolov11n/dataset/images/train"
+save_folder = "vision_tracking/dataset/images/train"
 
 cap = cv2.VideoCapture(video_url)
 

@@ -41,5 +41,5 @@ def convert_xml_to_yolo(folder):
 ################################################
 
 convert_xml_to_yolo(
-    folder=r'yolov11n\dataset\labels\train',
+    folder=r'vision_tracking\dataset\labels\train',
 )
