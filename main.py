@@ -8,11 +8,11 @@ from ultralytics import YOLO
 from datetime import datetime
 from deep_sort_realtime.deepsort_tracker import DeepSort
 
-from decision_engine.decision_matrix import DecisionMatrix
-from vision_tracking.camera_calculations.stereo_video import StereoVision
-from vision_tracking.camera_calculations.mono_video import MonoVision
+from decision_matrix import DecisionMatrix
+from stereo_video import StereoVision
+from mono_video import MonoVision
 from trackable_objects import Note
-from networking.rio_communication import post_to_network_tables
+from rio_communication import post_to_network_tables
 
 ###############################################################
 
@@ -20,8 +20,8 @@ class Config:
     """Configuration settings for video processing."""
     COVERAGE_THRESHOLD = 0.4
     CONFIDENCE_THRESHOLD = 0.7
-    DISPLAY = False
-    VIDEO_PATH = "http://limelight.local:5800" #"video.mp4" #0 #
+    DISPLAY = True
+    VIDEO_PATH = "video.mp4" #0 #"http://limelight.local:5800" #
     WEIGHTS_LOCATION = 'vision_tracking/runs/train/weights/best.pt'
     LABEL_COLORS = {
         "0": [0, 155, 255],
@@ -76,10 +76,9 @@ class VideoDisplay:
     def __init__(self) -> None:
         pass
 
-    def show_frame(self, frame):
-        if Config.DISPLAY:
-            self.out.write(frame)
-            cv2.imshow('Video', frame)
+    @staticmethod
+    def show_frame(frame):
+        cv2.imshow('Video', frame)
 
     @staticmethod
     def annotate_frame(frame, boxes, class_ids):
@@ -172,12 +171,7 @@ def main():
     Logger.setup_logging()
     processor = FrameProcessor()
     cap = cv2.VideoCapture(Config.VIDEO_PATH)
-    # frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    # frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-    # fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    # out = cv2.VideoWriter('output.mp4', fourcc, 20.0, (frame_width, frame_height))
-
+    
     if not cap.isOpened():
         logging.error(f"Error opening video: {Config.VIDEO_PATH}")
     
@@ -189,11 +183,9 @@ def main():
                 logging.warning("End of video stream.")
                 break
             
-            # out.write(frame)
             processed_frame, note = processor.process_frame(frame)
             if note:
                 post_to_network_tables((note.distance, note.angle))
-                print(note.distance, note.angle)
                 
             if Config.DISPLAY:
                 if note:
