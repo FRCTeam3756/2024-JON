@@ -37,7 +37,7 @@ class Logger:
 class YOLODetector:
     def __init__(self, device):
         self.device = device
-        self.model = YOLO('yolov11n/runs/train/weights/best.pt').to(self.device)
+        self.model = YOLO('vision_tracking/runs/train/weights/best.pt').to(self.device)
 
     def detect(self, frame):
         """Run detection on a frame and return processed results."""
@@ -127,6 +127,7 @@ class FrameProcessor:
     def update_notes(self, boxes, confidences, class_ids):
         """Update notes with detection data for game piece selection."""
         self.notes.clear()
+        current_time = time.time()
         for box, conf, class_id in zip(boxes, confidences, class_ids):
             if class_id == 0:
                 x1, y1, x2, y2 = box
@@ -135,10 +136,10 @@ class FrameProcessor:
                 ratio = (x2 - x1) / (y2 - y1)
                 
                 note = Note()
-                note.update_frame_location(center_x, center_y, scale, ratio)
+                note.update_frame_location(center_x, center_y, scale, ratio, current_time)
                 note.update_confidence(conf)
                 distance, angle = self.property_calculation.find_distance_and_angle(center_x, scale)
-                note.update_physical_location(distance, angle)
+                note.update_relative_location(distance, angle)
                 self.notes.append(note)
 
     def apply_nms(self, boxes, confidences):
