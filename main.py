@@ -5,7 +5,6 @@ import torch
 import logging
 import numpy as np
 from ultralytics import YOLO
-from datetime import datetime
 from deep_sort_realtime.deepsort_tracker import DeepSort
 
 from decision_engine.decision_matrix import DecisionMatrix
@@ -22,7 +21,7 @@ class Config:
     CONFIDENCE_THRESHOLD = 0.7
     DISPLAY = True
     VIDEO_PATH = "video.mp4" #0 #"http://limelight.local:5800" #
-    WEIGHTS_LOCATION = 'vision_tracking/runs/train/weights/best.pt'
+    WEIGHTS_LOCATION = 'vision_tracking/runs/train/weights/best.engine'
     LABEL_COLORS = {
         "0": [0, 155, 255],
         "1": [0, 0, 255],
@@ -38,11 +37,11 @@ class Logger:
 class YOLODetector:
     def __init__(self):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model = YOLO(Config.WEIGHTS_LOCATION).to(self.device)
+        self.model = YOLO(Config.WEIGHTS_LOCATION, task='detect')
 
     def detect(self, frame):
         """Run detection on a frame and return processed results."""
-        results = self.model(frame)[0]
+        results = self.model.predict(frame)[0]
         boxes, confidences, class_ids = self.extract_detections(results)
         return boxes, confidences, class_ids
 
@@ -67,8 +66,8 @@ class DeepSortTracker:
 
     def track(self, frame, boxes, confidences, class_ids):
         """Track objects in the frame."""
-        detections = [[x1, y1, x2 - x1, y2 - y1, confidences[i], class_ids[i]]
-                      for i, (x1, y1, x2, y2) in enumerate(boxes)]
+        detections = [[np.float16(x1), np.float16(y1), np.float16(x2 - x1), np.float16(y2 - y1), 
+               np.float16(confidences[i]), class_ids[i]] for i, (x1, y1, x2, y2) in enumerate(boxes)]
         tracked_objects = self.tracker.update_tracks(detections, frame=frame)
         return tracked_objects
 
@@ -141,7 +140,7 @@ class FrameProcessor:
                 ratio = (x2 - x1) / (y2 - y1)
                 
                 note = Note()
-                note.update_frame_location(center_x, center_y, scale, ratio, datetime.now())
+                note.update_frame_location(center_x, center_y, scale, ratio, time.time())
                 note.update_confidence(conf)
                 distance, angle = self.property_calculation.find_distance_and_angle(center_x, scale)
                 note.update_relative_location(distance, angle)
@@ -152,8 +151,8 @@ class FrameProcessor:
         if boxes.size == 0:
             return np.array([])
 
-        boxes_tensor = torch.tensor(boxes, dtype=torch.float32, device=self.detector.device)
-        confidences_tensor = torch.tensor(confidences, dtype=torch.float32, device=self.detector.device)
+        boxes_tensor = torch.tensor(boxes, dtype=torch.float16, device=self.detector.device)
+        confidences_tensor = torch.tensor(confidences, dtype=torch.float16, device=self.detector.device)
         indices = torch.ops.torchvision.nms(boxes_tensor, confidences_tensor, Config.COVERAGE_THRESHOLD)
         return indices.cpu().numpy() if indices.numel() > 0 else np.array([])
 
