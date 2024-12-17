@@ -1,5 +1,0 @@
-train: E:/jetson_orin_nano/yolov11n/dataset/images/train
-val: E:/jetson_orin_nano/yolov11n/dataset/images/val
-
-nc: 3
-names: ['note', 'red_robot', 'blue_robot']
